@@ -1,19 +1,26 @@
-import express, {type Request, type Response} from "express";
+import express, { type Request, type Response } from "express";
+import ApiError from "../common/utils/ApiError.uitls.ts";
+import notFoundMiddleware from "../common/middleware/notFound.middleware.ts";
+import errorMiddleware from "../common/middleware/error.middleware.ts";
 
 export default function startServer() {
     try {
         const app = express();
 
         app.use(express.json());
+        app.use(express.urlencoded({ extended: true }));
 
         app.get("/health", (_: Request, res: Response) => {
-            res.status(200).json({ok: true});
+            res.status(200).json({ ok: true });
         });
+
+        app.use(notFoundMiddleware);
+        app.use(errorMiddleware);
 
         return app;
     } catch (error: unknown) {
         if (error instanceof Error) {
-            console.error(error.message);
+            throw ApiError.internalError(error.message)
         }
     }
 };
