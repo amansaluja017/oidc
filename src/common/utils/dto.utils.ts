@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 class BaseDto {
-    static Schema = z.object({});
+    static schema: z.ZodObject;
 
     static validate(data: Body): { data: Record<string, any> | null, error: z.ZodError | null } {
-        const { success, data: parsedData, error } = this.Schema.safeParse(data);
+        const { success, data: parsedData, error } = this.schema.safeParse(data);
 
         if (!success) return { data: null, error };
 

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import {createServer} from "node:http";
-import startServer from "./src/module/server.ts";
 import ApiError from "./src/common/utils/ApiError.uitls.ts";
+import startServer from "./src/module/server.ts";
 
 (function main() {
     try {

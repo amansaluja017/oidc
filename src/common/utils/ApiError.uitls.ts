@@ -8,7 +8,7 @@ class ApiError extends Error {
     };
 
     static internalError(message: string = "Internal Error: something went wrong!") {
-        return new ApiError(500, message);
+        return new ApiError(500, `Internal Error: ${message}`);
     };
 
     static conflict(message: string = "User already exists") {
@@ -17,6 +17,10 @@ class ApiError extends Error {
 
     static badRequest(message: string = "bad request") {
         return new ApiError(400, message);
+    }
+
+    static unauthorized(message: string = "You are not authorized to do this") {
+        return new ApiError(404, message);
     }
 };
 
