@@ -10,5 +10,7 @@ router.get("/.well-known/openid-configuration", oidcController.configuration);
 router.get("/.well-known/jwks.json", oidcController.jwksConfigure);
 router.get("/o/authenticate", oidcController.loginPage);
 router.post("/create-client", validate(RegisterDto), oidcController.createClient);
+router.post("/o/token", oidcController.generateTokens);
+router.get("/o/userinfo", oidcController.userInfo);
 
 export default router;

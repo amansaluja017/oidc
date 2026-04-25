@@ -1,6 +1,6 @@
 import { boolean, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-export const tokenEnum = pgEnum("token_type", ["refreshToken", "accessToken", "verificationToken", "passwordResetToken"]);
+export const tokenEnum = pgEnum("token_type", ["refreshToken", "verificationToken", "passwordResetToken"]);
 
 export const usersTable = pgTable("users", {
   userId: uuid("user_id").primaryKey().defaultRandom(),
@@ -35,6 +35,23 @@ export const clientsTable = pgTable("clients", {
 
   clientId: text("client_id").notNull(),
   clientSecret: text("client_secret").notNull(),
+
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date())
+});
+
+export const authorizationCodesTable = pgTable("authorization_codes", {
+  codeId: uuid("code_id").primaryKey().defaultRandom(),
+
+  userId: uuid("user_id").references(() => usersTable.userId, {onDelete: "cascade"}),
+  clientId: uuid("client_id").references(() => clientsTable.id, {onDelete: "cascade"}),
+
+  code: text("code").notNull(),
+  redirectUrl: varchar("redirect_url", {length: 255}).notNull(),
+  nonce: text("nonce").notNull(),
+  isUsed: boolean("is_used").default(false).notNull(),
+
+  expire: timestamp("expire").notNull(),
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").$onUpdate(() => new Date())

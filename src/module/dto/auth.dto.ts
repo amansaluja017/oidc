@@ -11,4 +11,15 @@ class RegisterDto extends BaseDto {
     }).strict()
 };
 
-export { RegisterDto };
+class LoginDto extends BaseDto {
+    static schema: z.ZodObject = z.object({
+        email: z.email().nonempty(),
+        password: z.string().min(6).max(50),
+        clientId: z.string().nonempty(),
+        nonce: z.string().nonempty(),
+        redirectUrl: z.string().nonempty(),
+        state: z.string().nonempty()
+    }).strict()
+};
+
+export { RegisterDto, LoginDto };

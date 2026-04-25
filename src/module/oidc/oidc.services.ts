@@ -1,8 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../../db/index.ts"
-import { clientsTable } from "../../db/schema.ts";
+import { authorizationCodesTable, clientsTable, tokensTable, usersTable } from "../../db/schema.ts";
 import ApiError from "../../common/utils/ApiError.uitls.ts";
-import crypto from "node:crypto"
+import crypto from "node:crypto";
+import jwt from "jsonwebtoken";
+import { PRIVATE_KEY, PUBLIC_KEY } from "../../common/utils/keys.ts";
 
 function generateIds() {
     const rawId = crypto.randomBytes(32).toString("hex");
@@ -42,7 +44,7 @@ export const createClientService = async ({ name, domain, redirectUrl }: { name:
     return { client, clientId, clientSecret };
 };
 
-export const loginPageService = async ({ response_type, scope, state, client_id, redirect_url }: { response_type: string, scope: string, state: string, client_id: string, redirect_url: string }) => {
+export const loginPageService = async ({ response_type, scope, state, client_id, redirect_url, nonce }: { response_type: string, scope: string, state: string, client_id: string, redirect_url: string, nonce: string }) => {
 
     const [client] = await db.select()
         .from(clientsTable)
@@ -50,4 +52,91 @@ export const loginPageService = async ({ response_type, scope, state, client_id,
 
     if (!client) throw ApiError.unauthorized();
 
+};
+
+export const generateTokensService = async ({ code, clientId, clientSecret, grant_type, redirect_url }: { code: string, clientId: string, clientSecret: string, grant_type: string, redirect_url: string }) => {
+
+    if (!grant_type || grant_type !== "authorization_code") throw ApiError.badRequest("invalid grant type");
+
+    try {
+        const [authCode] = await db.select({
+            code: authorizationCodesTable.code,
+            expire: authorizationCodesTable.expire,
+            isUsed: authorizationCodesTable.isUsed,
+            nonce: authorizationCodesTable.nonce,
+            clientId: clientsTable.clientId,
+            clientSecret: clientsTable.clientSecret,
+            redirect_url: authorizationCodesTable.redirectUrl,
+            userId: usersTable.userId,
+            email: usersTable.email,
+            firstName: usersTable.firstName,
+            lastName: usersTable.lastName,
+            profileImageURL: usersTable.avatar
+        })
+            .from(authorizationCodesTable)
+            .innerJoin(clientsTable, eq(authorizationCodesTable.clientId, clientsTable.id))
+            .innerJoin(usersTable, eq(authorizationCodesTable.userId, usersTable.userId))
+            .where(eq(authorizationCodesTable.code, code))
+            .limit(1);
+
+        if (!authCode) throw ApiError.badRequest("invalid code");
+
+        if (authCode.isUsed) throw ApiError.badRequest("code already used");
+
+        if (authCode.expire < new Date()) throw ApiError.badRequest("code expired");
+
+        if (authCode.clientId !== generateHash(clientId)) throw ApiError.unauthorized("invalid client id");
+
+        if (authCode.clientSecret !== generateHash(clientSecret)) throw ApiError.unauthorized("invalid client secret");
+
+        if (authCode.redirect_url !== redirect_url) throw ApiError.unauthorized("invalid redirect url");
+
+        const claims = {
+            iss: "http://localhost:3000",
+            sub: authCode.userId,
+            email: authCode.email,
+            given_name: authCode.firstName ?? "",
+            family_name: authCode.lastName ?? undefined,
+            name: [authCode.firstName, authCode.lastName].filter(Boolean).join(" "),
+            picture: authCode.profileImageURL ?? undefined,
+        };
+
+        // generate access token and refresh token
+        const accessToken = jwt.sign(claims, PRIVATE_KEY, { algorithm: "RS256", expiresIn: "1h" });
+        const refreshToken = crypto.randomBytes(64).toString("hex");
+
+        // generate id token
+        const idToken = jwt.sign({ sub: claims.sub, nonce: authCode.nonce }, PRIVATE_KEY, { algorithm: "RS256", expiresIn: "1h" });
+
+        await db.insert(tokensTable).values({
+            userId: authCode.userId,
+            tokenType: "refreshToken",
+            token: refreshToken
+        });
+
+        // return tokens
+        return { accessToken, refreshToken, idToken };
+    } catch (error) {
+        console.log(error);
+        throw ApiError.internalError("failed to generate tokens");
+    }
+};
+
+export const userInfoService = async (token: string) => {
+
+    if (!token || typeof token !== "string" || !token.startsWith("Bearer ")) throw ApiError.badRequest("access token is required");
+
+    const access_token = token.split(" ")[1];
+
+    if (!access_token) throw ApiError.badRequest("access token is required");
+
+    try {
+        const decoded = jwt.verify(access_token, PUBLIC_KEY, { algorithms: ["RS256"] }) as jwt.JwtPayload;
+
+        if (!decoded.sub) throw ApiError.unauthorized("invalid token");
+
+        return decoded;
+    } catch (error) {
+        throw ApiError.unauthorized("invalid token");
+    }
 };
