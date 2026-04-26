@@ -46,7 +46,7 @@ export const loginPage = async (req: Request<any, any, any, loginParams>, res: R
 
     await loginPageService(req.query);
 
-    return res.sendFile(path.resolve("public/loginPage.html"))
+    return res.sendFile(path.resolve("public/loginPage.html"));
 };
 
 export const createClient = async (req: Request, res: Response) => {

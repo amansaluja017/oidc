@@ -19,38 +19,48 @@ function generateHash(id: string) {
 
 export const createClientService = async ({ name, domain, redirectUrl }: { name: string, domain: string, redirectUrl: string }) => {
 
-    const [existedClient] = await db.select().from(clientsTable).where(eq(clientsTable.domain, domain)).limit(1);
+    try {
+        const [existedClient] = await db.select().from(clientsTable).where(eq(clientsTable.domain, domain)).limit(1);
 
-    if (existedClient) ApiError.conflict("client already exists");
+        if (existedClient) throw ApiError.conflict("client already exists");
 
-    const { rawId: clientId, hashedId: hashedClientId } = generateIds();
-    const { rawId: clientSecret, hashedId: hashedClientSecret } = generateIds();
+        const { rawId: clientId, hashedId: hashedClientId } = generateIds();
+        const { rawId: clientSecret, hashedId: hashedClientSecret } = generateIds();
 
-    const [client] = await db.insert(clientsTable).values({
-        name,
-        domain,
-        redirectUrl,
-        clientId: hashedClientId,
-        clientSecret: hashedClientSecret
-    }).returning({
-        id: clientsTable.id,
-        name: clientsTable.name,
-        domain: clientsTable.domain,
-        redirectUrl: clientsTable.redirectUrl
-    });
+        const [client] = await db.insert(clientsTable).values({
+            name,
+            domain,
+            redirectUrl,
+            clientId: hashedClientId,
+            clientSecret: hashedClientSecret
+        }).returning({
+            id: clientsTable.id,
+            name: clientsTable.name,
+            domain: clientsTable.domain,
+            redirectUrl: clientsTable.redirectUrl
+        });
 
-    if (!client) ApiError.internalError("failed to create client");
+        if (!client) ApiError.internalError("failed to create client");
 
-    return { client, clientId, clientSecret };
+        return { client, clientId, clientSecret };
+    } catch (error) {
+        console.log(error);
+        throw ApiError.internalError("failed to create client");
+    }
 };
 
 export const loginPageService = async ({ response_type, scope, state, client_id, redirect_url, nonce }: { response_type: string, scope: string, state: string, client_id: string, redirect_url: string, nonce: string }) => {
 
-    const [client] = await db.select()
-        .from(clientsTable)
-        .where(and(eq(clientsTable.clientId, generateHash(client_id)), eq(clientsTable.redirectUrl, redirect_url)));
+    try {
+        const [client] = await db.select()
+            .from(clientsTable)
+            .where(and(eq(clientsTable.clientId, generateHash(client_id)), eq(clientsTable.redirectUrl, redirect_url)));
 
-    if (!client) throw ApiError.unauthorized();
+        if (!client) throw ApiError.unauthorized();
+    } catch (error) {
+        console.log(error);
+        throw ApiError.internalError("failed to validate client");
+    }
 
 };
 
@@ -92,7 +102,7 @@ export const generateTokensService = async ({ code, clientId, clientSecret, gran
         if (authCode.redirect_url !== redirect_url) throw ApiError.unauthorized("invalid redirect url");
 
         const claims = {
-            iss: "http://localhost:3000",
+            iss: process.env.ISSUER,
             sub: authCode.userId,
             email: authCode.email,
             given_name: authCode.firstName ?? "",

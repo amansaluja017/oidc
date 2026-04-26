@@ -314,14 +314,14 @@
       setLoading(true);
 
       try {
-        const res = await fetch('/o/authenticate/sign-in', {
+        const res = await fetch('http://localhost:3001/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
             password,
-            client_id: params.get('client_id'),
-            redirect_uri: params.get('redirect_uri'),
+            clientId: params.get('client_id'),
+            redirectUrl: params.get('redirect_url'),
             state: params.get('state'),
             nonce: params.get('nonce'),
           }),
@@ -331,8 +331,8 @@
 
         if (!res.ok) {
           showError(data.message || 'Something went wrong. Please try again.');
-        } else if (data.redirect) {
-          window.location.href = data.redirect;
+        } else if (data.data.redirect) {
+          window.location.href = data.data.redirect;
         }
       } catch {
         showError('Something went wrong. Please try again.');

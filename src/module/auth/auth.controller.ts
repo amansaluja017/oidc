@@ -10,9 +10,16 @@ export const registerUser = async (req: Request, res: Response) => {
 };
 
 export const loginUser = async (req: Request, res: Response) => {
-
-    const { code, state, redirectUrl } = await loginUserService(req.body);
-
-    // res.redirect(`${redirectUrl}?code=${code}&state=${state}`);
-    ApiResponse.ok(res, "login successful", { code, state });
+    try {
+        const { code, state, redirectUrl } = await loginUserService(req.body);
+        ApiResponse.ok(res, "login successful", { 
+            redirect: `${redirectUrl}?code=${code}&state=${state}` 
+        });
+    } catch (error) {
+        const redirectUrl = req.body.redirectUrl;
+        const state = req.body.state;
+        ApiResponse.ok(res, "error", { 
+            redirect: `${redirectUrl}?error=login_failed&state=${state}` 
+        });
+    }
 };
