@@ -310,7 +310,6 @@
     function showError(msg, err) {
       errorMsg.textContent = msg;
       errorMsg.style.display = 'block';
-      console.error('Signup error:', err);
     }
 
     function hideError() {
@@ -350,14 +349,12 @@
             lastName,
           }),
         });
-        console.log(res);
 
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
           showError(data.message || 'Something went wrong. Please try again.', err);
         } else if (data) {
-            console.log(data.data);
           window.location.href = '/loginPage.html' + window.location.search;
         }
       } catch (err) {

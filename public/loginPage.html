@@ -287,7 +287,6 @@
     function showError(msg, err) {
       errorMsg.textContent = msg;
       errorMsg.style.display = 'block';
-      console.error('Login error:', err);
     }
 
     function hideError() {
@@ -346,7 +345,6 @@
         }
       } catch (err) {
         showError('Something went wrong. Please try again.', err);
-        console.error('Login error:', err);
       } finally {
         setLoading(false);
       }
