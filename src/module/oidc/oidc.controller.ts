@@ -1,7 +1,6 @@
 import type { Response, Request } from "express"
 import ApiResponse from "../../common/utils/ApiResponse.utils.ts";
 import jose from "node-jose";
-import { PUBLIC_KEY } from "../../common/utils/keys.ts";
 import path from "path"
 import { createClientService, generateTokensService, loginPageService, userInfoService } from "./oidc.services.ts";
 import ApiError from "../../common/utils/ApiError.uitls.ts";
@@ -30,7 +29,7 @@ export const configuration = (_: Request, res: Response) => {
 
 export const jwksConfigure = async (_: Request, res: Response) => {
 
-    const key = await jose.JWK.asKey(PUBLIC_KEY, "pem");
+    const key = await jose.JWK.asKey(process.env.PUBLIC_KEY!, "pem");
 
     return ApiResponse.ok(res, "keys fetch successfully", {
         keys: [key.toJSON()]

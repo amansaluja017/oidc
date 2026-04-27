@@ -4,7 +4,6 @@ import { authorizationCodesTable, clientsTable, tokensTable, usersTable } from "
 import ApiError from "../../common/utils/ApiError.uitls.ts";
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
-import { PRIVATE_KEY, PUBLIC_KEY } from "../../common/utils/keys.ts";
 
 function generateIds() {
     const rawId = crypto.randomBytes(32).toString("hex");
@@ -64,6 +63,7 @@ export const loginPageService = async ({ response_type, scope, state, client_id,
 
 };
 
+
 export const generateTokensService = async ({ code, clientId, clientSecret, grant_type, redirect_url }: { code: string, clientId: string, clientSecret: string, grant_type: string, redirect_url: string }) => {
 
     if (!grant_type || grant_type !== "authorization_code") throw ApiError.badRequest("invalid grant type");
@@ -112,11 +112,11 @@ export const generateTokensService = async ({ code, clientId, clientSecret, gran
         };
 
         // generate access token and refresh token
-        const accessToken = jwt.sign(claims, PRIVATE_KEY, { algorithm: "RS256", expiresIn: "1h" });
+        const accessToken = jwt.sign(claims, process.env.PRIVATE_KEY!, { algorithm: "RS256", expiresIn: "1h" });
         const refreshToken = crypto.randomBytes(64).toString("hex");
 
         // generate id token
-        const idToken = jwt.sign({ sub: claims.sub, nonce: authCode.nonce }, PRIVATE_KEY, { algorithm: "RS256", expiresIn: "1h" });
+        const idToken = jwt.sign({ sub: claims.sub, nonce: authCode.nonce }, process.env.PRIVATE_KEY!, { algorithm: "RS256", expiresIn: "1h" });
 
         await db.insert(tokensTable).values({
             userId: authCode.userId,
@@ -141,7 +141,7 @@ export const userInfoService = async (token: string) => {
     if (!access_token) throw ApiError.badRequest("access token is required");
 
     try {
-        const decoded = jwt.verify(access_token, PUBLIC_KEY, { algorithms: ["RS256"] }) as jwt.JwtPayload;
+        const decoded = jwt.verify(access_token, process.env.PUBLIC_KEY!, { algorithms: ["RS256"] }) as jwt.JwtPayload;
 
         if (!decoded.sub) throw ApiError.unauthorized("invalid token");
 

@@ -36,3 +36,5 @@ bun.lock
 
 
 cert
+.agents
+skills-lock.json

@@ -4,7 +4,7 @@ import notFoundMiddleware from "../common/middleware/notFound.middleware.ts";
 import errorMiddleware from "../common/middleware/error.middleware.ts";
 import authRouter from "./auth/auth.routes.ts";
 import oidcRouter from "./oidc/oidc.routes.ts";
-import cors from "cors"
+import cors from "cors";
 
 export default function startServer() {
     try {
@@ -14,6 +14,7 @@ export default function startServer() {
 
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
+        app.use(express.static("public"));
 
         app.get("/health", (_: Request, res: Response) => {
             res.status(200).json({ ok: true });

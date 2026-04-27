@@ -230,12 +230,36 @@
           <path d="M20 21a8 8 0 1 0-16 0"/>
         </svg>
       </div>
-      <h1>Welcome back</h1>
-      <p class="subtitle">Sign in to your account to continue</p>
+      <h1>Hello, Great to see you!</h1>
+      <p class="subtitle">Create an account to get started</p>
     </div>
 
-    <form class="form" id="loginForm" novalidate>
+    <form class="form" id="signupForm" novalidate>
       <div id="errorMsg" class="error-msg" role="alert"></div>
+
+      <div class="field">
+        <label for="firstName">First Name</label>
+        <input
+          id="firstName"
+          name="firstName"
+          type="text"
+          autocomplete="given-name"
+          placeholder="John"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="lastName">Last Name</label>
+        <input
+          id="lastName"
+          name="lastName"
+          type="text"
+          autocomplete="family-name"
+          placeholder="Doe"
+          required
+        />
+      </div>
 
       <div class="field">
         <label for="email">Email</label>
@@ -252,7 +276,6 @@
       <div class="field">
         <div class="field-row">
           <label for="password">Password</label>
-          <a href="#" class="forgot">Forgot password?</a>
         </div>
         <input
           id="password"
@@ -266,17 +289,17 @@
 
       <button type="submit" id="submitBtn">
         <span class="spinner" id="spinner"></span>
-        <span id="btnText">Sign in</span>
+        <span id="btnText">Sign up</span>
       </button>
     </form>
 
     <div class="footer">
-      Don't have an account? <a id="signupBtn" href="/signupPage.html">Sign up</a>
+      Don't have an account? <a href="/loginPage.html">Sign in</a>
     </div>
   </div>
 
   <script>
-    const form = document.getElementById('loginForm');
+    const form = document.getElementById('signupForm');
     const submitBtn = document.getElementById('submitBtn');
     const spinner = document.getElementById('spinner');
     const btnText = document.getElementById('btnText');
@@ -296,17 +319,8 @@
     function setLoading(loading) {
       submitBtn.disabled = loading;
       spinner.style.display = loading ? 'block' : 'none';
-      btnText.textContent = loading ? 'Signing in…' : 'Sign in';
+      btnText.textContent = loading ? 'Signing up…' : 'Sign up';
     }
-
-    const signupBtn = document.getElementById('signupBtn');
-      const signupUrl = new URL(signupBtn.href);
-      signupUrl.searchParams.set('client_id', params.get('client_id') || '');
-      signupUrl.searchParams.set('redirect_url', params.get('redirect_url') || '');
-      signupUrl.searchParams.set('state', params.get('state') || '');
-      signupUrl.searchParams.set('nonce', params.get('nonce') || '');
-      signupBtn.href = signupUrl.toString();
-      console.log(signupBtn.href, signupUrl.toString());
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -314,8 +328,10 @@
 
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
 
-      if (!email || !password) {
+      if (!email || !password || !firstName || !lastName) {
         showError('Please fill in all fields.');
         return;
       }
@@ -323,16 +339,14 @@
       setLoading(true);
 
       try {
-        const res = await fetch('http://localhost:3001/api/auth/login', {
+        const res = await fetch('http://localhost:3001/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
             password,
-            clientId: params.get('client_id'),
-            redirectUrl: params.get('redirect_url'),
-            state: params.get('state'),
-            nonce: params.get('nonce'),
+            firstName,
+            lastName,
           }),
         });
 
@@ -340,8 +354,9 @@
 
         if (!res.ok) {
           showError(data.message || 'Something went wrong. Please try again.');
-        } else if (data.data.redirect) {
-          window.location.href = data.data.redirect;
+        } else if (data) {
+            console.log(data.data);
+          window.location.href = '/loginPage.html' + window.location.search;
         }
       } catch {
         showError('Something went wrong. Please try again.');
