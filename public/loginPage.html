@@ -284,9 +284,10 @@
 
     const params = new URLSearchParams(window.location.search);
 
-    function showError(msg) {
+    function showError(msg, err) {
       errorMsg.textContent = msg;
       errorMsg.style.display = 'block';
+      console.error('Login error:', err);
     }
 
     function hideError() {
@@ -343,8 +344,9 @@
         } else if (data.data.redirect) {
           window.location.href = data.data.redirect;
         }
-      } catch {
-        showError('Something went wrong. Please try again.');
+      } catch (err) {
+        showError('Something went wrong. Please try again.', err);
+        console.error('Login error:', err);
       } finally {
         setLoading(false);
       }
