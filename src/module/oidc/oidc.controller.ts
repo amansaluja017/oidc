@@ -2,7 +2,7 @@ import type { Response, Request } from "express"
 import ApiResponse from "../../common/utils/ApiResponse.utils.ts";
 import jose from "node-jose";
 import path from "path"
-import { createClientService, generateTokensService, loginPageService, userInfoService } from "./oidc.services.ts";
+import { createClientService, generateTokensService, getClientsService, loginPageService, userInfoService } from "./oidc.services.ts";
 import ApiError from "../../common/utils/ApiError.uitls.ts";
 
 interface loginParams {
@@ -68,4 +68,13 @@ export const userInfo = async (req: Request, res: Response) => {
     const decodedData = await userInfoService(req.headers.authorization);
 
     ApiResponse.ok(res, "user info fetch successfully", decodedData);
+};
+
+export const getClients = async (origin: string) => {
+
+    const {clients} = await getClientsService();
+
+    const client = clients.find((client) => client.domain === origin);
+
+    if (client) return !!client;
 };

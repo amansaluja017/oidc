@@ -10,7 +10,7 @@ import startServer from "./src/module/server.ts";
         const port = process.env.PORT ?? 3000;
 
         server.listen(port, () => {
-            console.log(`Server is listen on ${process.env.ISSUER}:${port}`);
+            console.log(`Server is listen on ${process.env.ISSUER}`);
         })
 
     } catch (error: unknown) {

@@ -48,6 +48,18 @@ export const createClientService = async ({ name, domain, redirectUrl }: { name:
     }
 };
 
+export const getClientsService = async () => {
+
+    const clients = await db.select({
+        id: clientsTable.id,
+        name: clientsTable.name,
+        domain: clientsTable.domain,
+        redirectUrl: clientsTable.redirectUrl
+    }).from(clientsTable);
+
+    return { clients };
+};
+
 export const loginPageService = async ({ response_type, scope, state, client_id, redirect_url, nonce }: { response_type: string, scope: string, state: string, client_id: string, redirect_url: string, nonce: string }) => {
 
     try {
