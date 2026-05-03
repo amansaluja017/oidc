@@ -73,6 +73,7 @@ export const userInfo = async (req: Request, res: Response) => {
 export const getClients = async (origin: string) => {
 
     const {clients} = await getClientsService();
+    console.log(clients, "all clients")
 
     const client = clients.find((client) => client.domain === origin);
 
