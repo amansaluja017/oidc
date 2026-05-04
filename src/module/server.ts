@@ -13,7 +13,6 @@ export default function startServer() {
 
         app.use(cors({origin: async function(origin, cb) {
             if (!origin) return cb(null, true);
-            console.log(origin, "origin");
 
             if (origin === "http://localhost:3000" || origin === "http://localhost:3001" || origin === "https://oidc-t4w5.onrender.com" || origin === "https://one-million-checkboxes-qf98.onrender.com") {
                 return cb(null, true);
