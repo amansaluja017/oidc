@@ -595,7 +595,7 @@
             setLoading(true);
 
             try {
-                const res = await fetch(`https://oidc-t4w5.onrender.com/create-client`, {
+                const res = await fetch(`/create-client`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

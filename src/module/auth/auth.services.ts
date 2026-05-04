@@ -45,6 +45,7 @@ export const loginUserService = async ({ email, password, clientId, nonce, redir
     if (!user) throw ApiError.unauthorized("invalid credentials");
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(isPasswordValid);
 
     if (!isPasswordValid) throw ApiError.unauthorized("invalid credentials");
 
@@ -54,6 +55,8 @@ export const loginUserService = async ({ email, password, clientId, nonce, redir
         const [client] = await db.select().from(clientsTable).where(eq(clientsTable.clientId, crypto.createHash("sha256").update(clientId).digest("hex"))).limit(1);
 
         if (!client) throw ApiError.unauthorized("invalid client");
+
+        if (client.redirectUrl !== redirectUrl) throw ApiError.unauthorized("invalid redirect url");
 
         const [auth_code] = await db.insert(authorizationCodesTable).values({
             userId: user.userId,

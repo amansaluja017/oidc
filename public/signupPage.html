@@ -294,7 +294,7 @@
     </form>
 
     <div class="footer">
-      Don't have an account? <a href="/loginPage.html">Sign in</a>
+      Don't have an account? <a id="signinBtn" href="/loginPage.html">Sign in</a>
     </div>
   </div>
 
@@ -306,6 +306,14 @@
     const errorMsg = document.getElementById('errorMsg');
 
     const params = new URLSearchParams(window.location.search);
+
+    const signinBtn = document.getElementById('signinBtn');
+    const signinUrl = new URL(signinBtn.href);
+    signinUrl.searchParams.set('client_id', params.get('client_id') || '');
+    signinUrl.searchParams.set('redirect_url', params.get('redirect_url') || '');
+    signinUrl.searchParams.set('state', params.get('state') || '');
+    signinUrl.searchParams.set('nonce', params.get('nonce') || '');
+    signinBtn.href = signinUrl.toString();
 
     function showError(msg, err) {
       errorMsg.textContent = msg;
@@ -339,7 +347,7 @@
       setLoading(true);
 
       try {
-        const res = await fetch(`https://oidc-t4w5.onrender.com/api/auth/register`, {
+        const res = await fetch(`/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -355,7 +363,7 @@
         if (!res.ok) {
           showError(data.message || 'Something went wrong. Please try again.', err);
         } else if (data) {
-          window.location.href = 'https://oidc-t4w5.onrender.com/loginPage.html' + window.location.search;
+          window.location.href = '/loginPage.html' + window.location.search;
         }
       } catch (err) {
         showError('Something went wrong. Please try again', err);
